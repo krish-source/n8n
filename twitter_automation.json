@@ -1,0 +1,217 @@
+{
+  "name": "AI Tech News to X Poster",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "eb618da9-743a-48a8-a0ce-f05ad98b4585",
+      "name": "Every 24 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "YOUR_TAVILY_API_KEY_HERE"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "api_key",
+              "value": "YOUR_TAVILY_API_KEY_HERE"
+            },
+            {
+              "name": "query",
+              "value": "AI technology news latest developments"
+            },
+            {
+              "name": "search_depth",
+              "value": "advanced"
+            },
+            {
+              "name": "max_results",
+              "value": "10"
+            },
+            {
+              "name": "include_answer",
+              "value": "advanced"
+            },
+            {
+              "name": "topic",
+              "value": "news"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4073df6e-efa1-43b6-a8fb-b29156bdbed1",
+      "name": "Tavily News Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        192,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "id": "423605e8-0d28-464f-943b-c318fc248f78",
+      "name": "Post to X",
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [
+        848,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "CREATE_NEW_TABLE",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Post": "={{ $('AI Agent').item.json.output }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "da33f501-7d0d-4a87-934b-dca2bfb581ef",
+      "name": "Save Post to Data Table",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze these AI tech news articles:\n\n{{ $json.results }}\n\nCreate ONE viral X post following this structure:\n\nSTRUCTURE:\n[Hook/Surprise] → [Key Finding] → [Implication/Why It Matters] → [Hashtags]\n\nREQUIREMENTS:\n✓ Under 280 characters (aim for 250-270 for optimal engagement)\n✓ Start with a strong hook (e.g., \"Wild:\", \"This changes everything:\", \"Plot twist:\", \"Nobody's talking about this but...\")\n✓ Include ONE specific stat/number/timeframe if available\n✓ Focus on the most surprising or significant finding\n✓ End with what this means for the future\n✓ Use 2-3 relevant hashtags (mix of popular + specific)\n✓ Make people want to click, share, or reply\n✓ Sound human, not AI-generated\n\nAVOID:\n✗ Generic phrases like \"just announced\" without context\n✗ Overly formal language\n✗ Ending with questions (they reduce engagement)\n✗ Too many hashtags or emojis\n✗ Hype without substance\n\nReturn ONLY the post text, nothing else.",
+        "options": {
+          "systemMessage": "You are an expert viral content strategist specializing in AI and tech news on X (Twitter). Your posts consistently get high engagement because you understand viral mechanics:\n\nVIRAL WRITING TECHNIQUES:\n- Start with a hook that creates curiosity or surprise\n- Use pattern interrupts (unexpected angles, contrarian takes)\n- Include specific numbers, stats, or timeframes when possible\n- Create emotional resonance (excitement, intrigue, FOMO)\n- End with a thought-provoking angle or implication\n\nTONE & STYLE:\n- Write like a knowledgeable insider sharing breaking news\n- Be enthusiastic but not hypey\n- Use conversational language (contractions, short sentences)\n- Avoid corporate/press release language\n- Think: \"smart friend sharing cool news\" not \"news anchor reporting\"\n\nENGAGEMENT TRIGGERS:\n- Highlight what's surprising or unexpected\n- Focus on implications and \"what this means\"\n- Create curiosity gaps without clickbait\n- Use power words: breakthrough, reveals, quietly, secretly, just announced\n\nKeep everything under 280 characters with 2-3 strategic hashtags."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        400,
+        0
+      ],
+      "id": "5615ed94-d32b-4741-b485-f0a1e9be946d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "chatgpt-4o-latest"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        272,
+        208
+      ],
+      "id": "dde794f0-5c03-4a10-99d8-2b858ce1a681",
+      "name": "OpenAI Chat Model"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every 24 Hours": {
+      "main": [
+        [
+          {
+            "node": "Tavily News Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily News Search": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to X": {
+      "main": [
+        [
+          {
+            "node": "Save Post to Data Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Post to X",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
